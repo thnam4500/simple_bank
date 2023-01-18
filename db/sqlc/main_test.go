@@ -18,8 +18,8 @@ const (
 )
 
 func TestMain(m *testing.M) {
-
-	testDB, err := sql.Open(dbDriver, dbSource)
+	var err error
+	testDB, err = sql.Open(dbDriver, dbSource)
 	if err != nil {
 		log.Fatal("error database connection", err)
 	}
