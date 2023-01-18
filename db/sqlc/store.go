@@ -35,15 +35,15 @@ func (s *Store) execTx(ctx context.Context, fn func(*Queries) error) error {
 }
 
 type TransferTxParams struct {
-	FromAccountID int64 `json:"from_account_id`
+	FromAccountID int64 `json:"from_account_id"`
 	ToAccountID   int64 `json:"to_account_id"`
 	Amount        int64 `json:"amount"`
 }
 
 type TransferTxResult struct {
 	Transfer      Transfer `json:"transfer"`
-	FromAccountID int64    `json:"from_account_id"`
-	ToAccountID   int64    `json:"to_account_id"`
+	FromAccountID Account  `json:"from_account"`
+	ToAccountID   Account  `json:"to_account"`
 	FromEntry     Entry    `json:"from_entry"`
 	ToEntry       Entry    `json:"to_entry"`
 }

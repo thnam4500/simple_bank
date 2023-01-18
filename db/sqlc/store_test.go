@@ -19,6 +19,7 @@ func TestTransferTx(t *testing.T) {
 	errs := make(chan error)
 	results := make(chan TransferTxResult)
 
+	// run n concurrent transfer transaction
 	for i := 0; i < n; i++ {
 		go func() {
 			result, err := store.TransferTx(context.Background(), TransferTxParams{
@@ -31,6 +32,7 @@ func TestTransferTx(t *testing.T) {
 		}()
 	}
 
+	// check results
 	for i := 0; i < n; i++ {
 		err := <-errs
 		result := <-results
@@ -38,6 +40,7 @@ func TestTransferTx(t *testing.T) {
 		require.NoError(t, err)
 		require.NotEmpty(t, result)
 
+		// check transfer
 		transfer := result.Transfer
 
 		require.NotEmpty(t, transfer)
@@ -50,6 +53,25 @@ func TestTransferTx(t *testing.T) {
 		require.NoError(t, err)
 
 		// Todo: Check entry
+		fromEntry := result.FromEntry
+		require.NotEmpty(t, fromEntry)
+		require.Equal(t, account1.ID, fromEntry.ID)
+		require.Equal(t, -amount, fromEntry.Amount)
+		require.NotZero(t, fromEntry.ID)
+		require.NotZero(t, fromEntry.CreatedAt)
+
+		_, err = store.GetEntry(context.Background(), fromEntry.ID)
+		require.NoError(t, err)
+
+		toEntry := result.ToEntry
+		require.NotEmpty(t, toEntry)
+		require.Equal(t, account1.ID, toEntry.ID)
+		require.Equal(t, amount, toEntry.Amount)
+		require.NotZero(t, toEntry.ID)
+		require.NotZero(t, toEntry.CreatedAt)
+
+		_, err = store.GetEntry(context.Background(), toEntry.ID)
+		require.NoError(t, err)
 		// Todo: Check account balance
 	}
 }
