@@ -1,6 +1,6 @@
 module github.com/thnam4500/simple_bank
 
-go 1.19
+go 1.17
 
 require (
 	github.com/lib/pq v1.10.7
