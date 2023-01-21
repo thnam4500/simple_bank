@@ -7,7 +7,7 @@ import (
 
 // Server serves HTTP requests
 type Server struct {
-	store  *db.Store
+	store  db.Store
 	router *gin.Engine
 }
 
@@ -19,7 +19,7 @@ func (s *Server) Start(address string) error {
 	return s.router.Run(address)
 }
 
-func NewServer(store *db.Store) *Server {
+func NewServer(store db.Store) *Server {
 	server := &Server{store: store}
 	router := gin.Default()
 
