@@ -1,16 +1,22 @@
 package api
 
 import (
+	"fmt"
+
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
 	db "github.com/thnam4500/simple_bank/db/sqlc"
+	"github.com/thnam4500/simple_bank/token"
+	"github.com/thnam4500/simple_bank/util"
 )
 
 // Server serves HTTP requests
 type Server struct {
-	store  db.Store
-	router *gin.Engine
+	config     util.Config
+	store      db.Store
+	tokenMaker token.Maker
+	router     *gin.Engine
 }
 
 func errorResponse(err error) gin.H {
@@ -21,25 +27,37 @@ func (s *Server) Start(address string) error {
 	return s.router.Run(address)
 }
 
-func NewServer(store db.Store) *Server {
-	server := &Server{store: store}
-	router := gin.Default()
+func NewServer(config util.Config, store db.Store) (*Server, error) {
+	tokenMaker, err := token.NewPasetoMaker(config.TokenSymmetricKey)
+	if err != nil {
+		return nil, fmt.Errorf("can't create token maker: %w", err)
+	}
+	server := &Server{
+		config:     config,
+		store:      store,
+		tokenMaker: tokenMaker,
+	}
 
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
 		v.RegisterValidation("currency", validCurrency)
 	}
 
-	router.POST("/accounts", server.createAccount)
-	router.GET("/accounts/:id", server.getAccount)
-	router.GET("/accounts", server.listAccount)
-	router.DELETE("/accounts/:id", server.deleteAccount)
-	router.PUT("/accounts/", server.updateAccountBalance)
-	router.PUT("/accounts/add-balance", server.addBalance)
+	server.setupServer()
+	return server, nil
+}
 
-	router.POST("/transfer", server.createTransfer)
+func (s *Server) setupServer() {
+	router := gin.Default()
+	router.POST("/accounts", s.createAccount)
+	router.GET("/accounts/:id", s.getAccount)
+	router.GET("/accounts", s.listAccount)
+	router.DELETE("/accounts/:id", s.deleteAccount)
+	router.PUT("/accounts/", s.updateAccountBalance)
+	router.PUT("/accounts/add-balance", s.addBalance)
 
-	router.POST("/users", server.createUser)
+	router.POST("/transfer", s.createTransfer)
 
-	server.router = router
-	return server
+	router.POST("/users", s.createUser)
+	router.POST("/users/login", s.loginUser)
+	s.router = router
 }
